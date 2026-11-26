@@ -1,0 +1,143 @@
++++ append
+This domain
+-----------
+Blind paper drafting, judged by a reviewer you evolve, anchored on hidden human
+conference decisions. Two seats, both ordinary Python under `task_agents/`,
+both yours to edit, both scored, and they weigh the same:
+
+  `task_agents/writer/__init__.py`    reads a title and abstract (`input`, about
+                                      a thousand characters, never the body)
+                                      and writes `paper_text`. Scored on
+                                      `write_validation` by an external
+                                      reviewer that is not yours.
+  `task_agents/reviewer/__init__.py`  reads `paper_text`, the full body of a
+                                      real submission (commonly ten thousand
+                                      words), and writes `verdict.txt`.
+                                      Measured against the decision a human
+                                      programme committee recorded for that
+                                      paper.
+
+Each seat's prompt is the `INSTRUCTION` literal in its module, code like the
+rest of the seat. An edit to either changes that seat's digest, so the summary
+groups it as a new seat. A seat may do more than one model call: the `solve`
+capability every seat receives runs the same multi-turn harness your own
+episode runs in, over the seat's working directory, so a writer that drafts,
+reads, and revises is one edit away.
+
+Read every ancestor before you plan. Each episode before you on your chain is
+unpacked whole under `experience/generations/<depth>/`: every train row it
+submitted and what came back, and its entire conversation in `node-dialogue.md`.
+Commit messages are what an ancestor chose to write down; the folder is what
+happened, including the attempts it never mentioned. Siblings that never look
+rewrite the same prompt toward the same wording and each report the same null
+result.
+
+The reviewer
+------------
+It runs in two modes and only one earns its score.
+
+  GENERATE  reads `paper_text` and writes `verdict.txt`, which is read as JSON
+            `{"score": 1.0}` for accept, `0.0` for reject, `-1.0` for a reply
+            stating neither, so a seat edited to write the word `accept` makes
+            every judgment raise rather than score. The number is compared with the human decision for
+            that paper, and that comparison is the whole of the reviewer's
+            objective. A verdict that fails to parse counts as a disagreement,
+            not a rejection: `-1.0` is a wrong answer on accept and reject rows
+            alike, below what a constant answer would earn.
+  JUDGE     reads the writer's draft instead. Its verdict scores the writer,
+            not itself, and only on train rows. The writer's measured score
+            comes from an external, harsher reviewer, so a lenient reviewer of
+            yours buys the writer nothing and costs the reviewer its own
+            agreement with the human decisions.
+
+The writer
+----------
+It runs in one mode and is always scored. An external reviewer reads the draft
+and answers accept or reject: accept scores 1.0 on that row, reject 0.0, an
+unreadable draft 0.0. No partial credit. The model's whole reply is the draft:
+nothing is parsed out of it, so what the writer sends back is what the reviewer
+reads, preface and all. Submit the writer first, before you plan anything: one
+submission exercises its whole chain (the model call, `paper_text`, your
+reviewer reading it) and tells you which of the two you are getting.
+
+Your reviewer's verdict on your writer is a heuristic. It says whether a change
+moved anything on your own tree; it does not say the level, because the
+reviewer that decides is not the one you tuned. The reviewer's own train number
+is different in kind: agreement with a real human decision, the objective
+itself, measured for selection on a held-out set you never see. On both seats
+the scale is the same, 1.0 for accept and 0.0 for everything else; it is the
+judge that differs.
+
+The populations
+---------------
+They never overlap, and only the train ones are yours to look at.
+
+  train_positive, train_negative   the reviewer's train rows, 50 + 50. Submit
+                                   against them as often as you like; the
+                                   human decision for each is staged beside
+                                   the sample under `experience/data/train/`.
+                                   Nothing scored here decides anything, and
+                                   the task agents you submit never see that
+                                   folder.
+  write_train                      the writer's train rows, staged the same
+                                   way, and the only place the writer's output
+                                   format is exercised before it is measured.
+                                   The decision is staged on these rows too;
+                                   you may read it, nothing grades a draft
+                                   against it.
+  validation_positive, _negative   the reviewer's measured rows. Every judgment
+                                   the reviewer earns comes off these and you
+                                   never see their decisions.
+  write_validation                 the writer's measured rows. Never staged.
+  heldout                          the test split. Nothing in this run touches
+                                   it.
+  adversarial                      scored once it exists, fully external: you
+                                   cannot see it, count it or practise on it,
+                                   and nothing you do reaches it on a timing
+                                   you control. A row arrives and you answer
+                                   it on what it says.
+
+What your node is ranked on
+---------------------------
+Both seats, weighing the same. The sampler draws role-balanced (least-loaded
+role first, then least-loaded task within it), so the writer's one task is
+sampled as much as the reviewer's tasks together and the writer is half of
+your node's utility. A perfect reviewer with a writer that never scores gives
+the node 0.5, and nothing the reviewer does can lift it above that. The
+composite is carried up your clade: your descendants' results count toward
+you, so a node that improves one seat and breaks the other has not improved,
+and one that trades away code its descendants need pays for it through them.
+
+Neither seat can be answered by a policy. The corpus is built so that
+accepting everything and rejecting everything both fail; discernment is the
+whole of what is being measured here.
+
+Measuring
+---------
+`rqgm-call submit` and `rqgm-call wait` work as the shared page says; the
+rows land in `experience/generations/<depth>/results.csv` with `summary.json`
+beside them, and `task_agents/shared/TRAIN.md` describes both files.
+
+Read the rate off `summary.json`, never off stdout or a hand count. `by_seat`
+groups each role by `seat_digest`, the digest of the submitted tree, so it
+groups by the bytes that ran whatever your tag says; each group carries `n`,
+`measured` and `rate`. One row moving is not an improvement. `kind` says what a
+row is: `MEASURED` is a judgment, `FAILED` a seat that ran and did not produce,
+`REFUSED` carries a `refusal_code` saying why the harness would not run it.
+A group that mostly refused measures a broken edit,
+not your seat. Reaching a verdict is not being accepted: `MEASURED` says the
+chain works, `success` is the heuristic above.
+
+Both halves of the reviewer need measuring, and so does the writer: a rate over
+positives alone says nothing about the negatives, and the writer keeps its own
+groups in the same summary. The shape of a useful turn is a reading taken
+before you touch anything, one change, then at least the rows you already
+measured submitted again -- and the commit message saying what you measured
+before, what after, and on how many rows. A change you could not move is worth
+the same sentence: what you tried and what you ruled out is a result your
+descendants inherit rather than rediscover. Train rows cost model calls, and
+that spend is what the expansion is for.
+
+Edit, then submit, never both at once: a train row runs the seat as it stood in
+the snapshot the submission took, so an edit landed while a batch is in flight
+is in no row of that batch.

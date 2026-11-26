@@ -1,0 +1,8 @@
+# Closure of jinja2 and pydantic; the mini-swe episode image installs these pins.
+annotated-types==0.7.0
+jinja2==3.1.6
+markupsafe==3.0.3
+pydantic==2.13.4
+pydantic-core==2.46.4
+typing-extensions==4.15.0
+typing-inspection==0.4.2

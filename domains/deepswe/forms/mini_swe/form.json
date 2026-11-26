@@ -1,0 +1,207 @@
+{
+  "domain": "deepswe",
+  "coordinates": {
+    "currency": {
+      "adversarial": true,
+      "dataset": true,
+      "interpretation": false,
+      "reviewer": true,
+      "sample": false
+    },
+    "dataset": "dataset",
+    "interpretation": "interpretation",
+    "sample": "sample"
+  },
+  "pins": {
+    "adversarial": "empty",
+    "interpretation": "verdict-v1"
+  },
+  "interpretations": {
+    "adversarial-v1": {
+      "high": 0.0,
+      "kind": "band",
+      "low": 0.0
+    },
+    "verdict-v1": {
+      "kind": "full_credit"
+    }
+  },
+  "roles": {
+    "reviewer": {
+      "tasks": {
+        "review_positive": {
+          "search": "validation_positive",
+          "train": "train_positive"
+        },
+        "review_negative": {
+          "search": "validation_negative",
+          "train": "train_negative"
+        }
+      },
+      "reads": "assessed",
+      "episode": {
+        "argv": [
+          "python",
+          "-m",
+          "task_agents.shared.runtime"
+        ],
+        "image_recipe": "meta-arm/mini-swe",
+        "tag": "haiku-high",
+        "outputs": {
+          "verdict.txt": "verdict.txt"
+        },
+        "evidence": {
+          "parsed": ".rqgm/parsed.json",
+          "reply": ".rqgm/reply.txt",
+          "reviewed": ".rqgm/reviewed.txt"
+        },
+        "token_allotment": "unbounded",
+        "idle_seconds": 3600.0
+      }
+    },
+    "solver": {
+      "tasks": {
+        "solve": {
+          "search": "validation",
+          "train": "train"
+        }
+      },
+      "reads": "input",
+      "episode": {
+        "argv": [
+          "/opt/agent-runtime/bin/python",
+          "-m",
+          "task_agents.shared.runtime"
+        ],
+        "image_recipe": "meta-arm/runtime",
+        "checkout": "/app",
+        "tag": "haiku-high",
+        "outputs": {
+          "assessed": "assessed",
+          "model.patch": "model.patch"
+        },
+        "evidence": {
+          "messages": ".rqgm/messages.json",
+          "observations": ".rqgm/observations.jsonl",
+          "review": ".rqgm/review.txt",
+          "scratch": ".rqgm/scratch.md",
+          "staged": ".rqgm/staged.txt",
+          "stop": ".rqgm/stop.json"
+        },
+        "token_allotment": "unbounded",
+        "idle_seconds": 3600.0
+      }
+    }
+  },
+  "judges": {
+    "calls": {
+      "over": [
+        "reviewer"
+      ],
+      "rule": "review-agreement-v1",
+      "tag": "haiku-high",
+      "identity": true,
+      "reads": [
+        "verdict.txt"
+      ],
+      "settles": [
+        "review_label"
+      ],
+      "deadline_seconds": 300.0
+    },
+    "grader": {
+      "over": [
+        "solver"
+      ],
+      "rule": "deepswe-tests-v1",
+      "interpretation": "verdict-v1",
+      "identity": true,
+      "reads": [
+        "model.patch"
+      ],
+      "settles": [
+        "image",
+        "verifier"
+      ],
+      "deadline_seconds": 7200.0
+    },
+    "reviewer": {
+      "over": [
+        "solver"
+      ],
+      "rule": "review-decision-v1",
+      "identity": false,
+      "reads": [
+        "assessed",
+        "model.patch"
+      ],
+      "settles": [],
+      "deadline_seconds": 300.0
+    }
+  },
+  "transitions": {
+    "adversarial": {
+      "criterion": {
+        "high": 1.0,
+        "low": 1.0,
+        "slot": "reviewer"
+      },
+      "interpretation": "adversarial-v1",
+      "judge": "reviewer",
+      "kind": "pool",
+      "name": "adversarial",
+      "signer": "reviewer"
+    },
+    "reviewer": {
+      "kind": "objective_transition",
+      "min_trials": 0,
+      "surfaces": [
+        {
+          "judge": "calls",
+          "samples": "validation_positive",
+          "side": "accept"
+        },
+        {
+          "judge": "calls",
+          "samples": "validation_negative",
+          "side": "reject"
+        },
+        {
+          "judge": "reviewer",
+          "samples": "adversarial",
+          "side": "reject"
+        }
+      ]
+    }
+  },
+  "expansion": {
+    "argv": [
+      "python",
+      "-B",
+      "meta/entry.py"
+    ],
+    "image_recipe": "meta-arm/mini-swe",
+    "tag": "haiku-high",
+    "outputs": {},
+    "evidence": {},
+    "token_allotment": "unbounded",
+    "idle_seconds": 3600.0
+  },
+  "bindings": {
+    "haiku-high": {
+      "effort": "high",
+      "endpoint": "anthropic/claude-haiku-4-5",
+      "kwargs": {},
+      "output_tokens": 128000,
+      "sequence_tokens": 1000000
+    }
+  },
+  "weights": {
+    "haiku-high": {
+      "tokens_in": 1.0,
+      "tokens_out": 1.0
+    }
+  },
+  "cpus": 2.0,
+  "memory_bytes": 8589934592
+}

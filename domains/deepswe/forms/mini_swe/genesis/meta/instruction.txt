@@ -1,0 +1,137 @@
++++ append
+This domain
+-----------
+Train samples are evaluated only when you submit them, and the host admits as
+many rows as it has free capacity for. Keep each result's `submission_commit`
+and `job` so you compare the code that was actually measured.
+
+A solver reads one real software-engineering task and emits a diff, working
+inside the task's own image with the repository checked out at its base
+revision. The initial reviewer reads the complete diff and problem statement in
+one `chat` call and answers accept or reject. When the solver asks for a
+self-review, the reviewer runs inside the solver's episode and its Python code
+also receives `inputs["repository"]`, the path to that checkout. You may evolve
+the reviewer to read more before its model call, add tools, or use multiple
+turns; a path in a prompt does not mean the model has read the file, so code
+must supply the contents it chooses. Two fixed instruments sit around them:
+`grader` runs the task's own tests over the diff, and `calls` compares the
+reviewer's verdict with the decision the corpus records for that row.
+
+Both seats are ordinary Python under `task_agents/`, prompt, parsing and rules
+as code, and you evolve `task_agents/solver/__init__.py` and
+`task_agents/reviewer/__init__.py`. The solver is a seat you rewrite, not an
+instrument you feed: `meta/solve.py` is the mini-swe harness materialised in
+this node and editing it changes what writes the diff as surely as editing the
+seat. mini-swe-agent sits in the expansion seat too, running this shared
+harness, so what you change is the seats and the tree around them.
+
+The reviewer is shown no grading standard on any surface. Judging a solver's
+patch or reviewing a corpus row (`review_positive`, `review_negative` and their
+train halves, where its own score comes from) it decides from the problem
+statement, the complete authored diff, and any repository context its code reads.
+The corpus contains no reference solution a seat can read. The task's tests,
+the paths its reference solution changes, and the review decision live in the
+`verifier` and `review_label` channels, which no seat reads, and only the
+author's own test output may reach the reviewer, during a self-review. A
+generating episode is handed its one declared channel. So the reviewer is not a
+second grader: `grader` runs the tests and answers yes or no; the reviewer
+never sees them and asks whether a maintainer would take this diff, which is
+why it can reject a patch that passes and accept one that clears the bar
+another way.
+
+The reviewer you carry is the only review signal you get, and the one that
+scores your patches is an external, harsher one: the chair is filled by
+whichever candidate last won it on agreement with the recorded decisions, and
+you never see it. A lenient reviewer of yours raises the only number you can
+see and moves nothing that is scored. Spend self-review finding the diffs a
+maintainer would send back.
+
+During a solver episode, `meta/solve.py` offers the native `self_review` tool.
+Save your tests' printed output, commit the patch, then call it with
+`{"evidence": "path/to/test-output.txt"}`. The path is relative to the task
+checkout, or absolute within the episode tree or checkout. It reviews the
+committed diff from the episode's original baseline through every solve round.
+Its feedback and model usage belong to that solver episode. Shell commands
+carry no model authority; the independent final grader still decides the score.
+
+The populations
+---------------
+The corpus is split over whole repositories: 28 tasks to `train`, 57 to
+`validation`, 28 to `test`, and each task also yields two review rows, its
+passing model patch accepted and a real failed one rejected, in that split's
+halves. Only `train` is staged, under `experience/data/train/`, with every
+permitted column on disk beside the sample, the human decision and the
+official verifier included, because a train row decides no score; that is also
+why tuning against a train row proves nothing about `validation`, and the task
+agents you submit never see that folder. `validation` scores you and you never
+see a row of it. `test` is drawn by nothing. The `adversarial` pool is external:
+you cannot see it, count it or read a member, and nothing you do reaches it on
+a timing you control.
+
+What your node is ranked on
+---------------------------
+Two axes, not derived from each other. `grader` runs the task's own tests over
+your patch inside the sample's own image and takes the verifier's reward. It
+first drops from the patch any change to a file the task's tests own, and any
+change to test infrastructure (test folders, test files, test configuration)
+that the reference solution does not also make; `guard.json` lists what it
+dropped. The reward is binary: every fail-to-pass test passing and no
+pass-to-pass test regressing, so `19/20` fails exactly as `0/20` does, and
+`judges.grader` declares `interpretation: verdict-v1`: 1.0 when the task
+resolved, 0.0 otherwise. `calls`
+scores the reviewer against rows accepted where the model patch passed and
+rejected where it failed, and the reviewer also scores the `adversarial` pool.
+A patch can pass and be rejected, fail and be accepted, or take both verdicts;
+all four are ordinary states. A node is drawn on its own trials and on those
+pooled through its descendants, and every judged cell is the same currency.
+
+So improve both seats and submit them at similar rates. A solver row costs
+more than a reviewer row (it runs the sample's verifier over your patch), so
+equal rates take more samples per role, which `--per-role` sets on one call. A
+candidate that reads one or two solver rows cannot tell a regression from
+noise, and the half it guessed at is the half the held-out tests score.
+
+Reading a result
+----------------
+`rqgm-call samples` and `rqgm-call submit` work as the shared page says; the
+rows land in `experience/generations/<depth>/results.csv` with `summary.json`
+beside them, and `task_agents/shared/TRAIN.md` spells the columns.
+A judged train row uses both judges every time, and each row leaves its
+judges' evidence under `evaluations/<action>/`: `reward.json` carries the
+verifier's tallies beside the verdict, for diagnosis and never for worth;
+`f2p 39/55` and `f2p 11/55` are the same binary and completely different next
+moves. `test-stdout.txt` says which tests failed, and `guard.json` which of
+your changes were dropped. One row is not a rate: `summary.json` carries each
+seat's rate, by submitted tree and by ancestor.
+
+Measure the solver: its rows are the expensive ones and the easiest to skip,
+and skipping them is how a solver edit ships untested. Measure both halves of
+the reviewer: a rate over `train_positive` alone says how often your seat says
+accept, not how often it is right; the two halves exist so that a constant
+policy fails visibly.
+
+What your ancestors left
+------------------------
+Each episode before you is unpacked whole under
+`experience/generations/<depth>/`: every train row it submitted and what came
+back, its conversation in `node-dialogue.md`, and its `file-effects.json`, which
+carries a `root` field on every row: `workspace` rows are this tree; a
+`checkout` row is the
+sample's own repository, the worktree a solver edits inside the benchmark's
+image, which is never committed and appears in no `git diff`. There is at most
+one `checkout` row, its `path` is the literal `checkout.patch`, its bytes are
+the whole patch and its `change` is `modified`. `roots.checkout` reading
+`read: true` with a row means a patch was captured; `read: true` with no row
+means the diff was empty; `read: false` carries the reason the host could not
+read it; no `checkout` root at all means that arm never opened a repository.
+
+What will not work
+------------------
+No constant policy survives here. A seat that always accepts scores zero on
+every negative row and one that always rejects scores zero on every positive
+one, and the adversarial pool is worse than symmetric: it takes the accepting
+strategy's own output and pays only for rejecting it. Nor does softening the
+reviewer you carry, since the seat that scores you never sees your opinion of
+yourself -- a permissive reviewer moves your own number and nothing else. And
+a task is not resolved because its tallies looked close: `resolved` is the
+benchmark's definition, and `19/20` is not it.

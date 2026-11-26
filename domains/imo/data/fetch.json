@@ -1,0 +1,68 @@
+{
+  "build": {
+    "args": [],
+    "tool": "tools/operations/build_imo_corpus.py"
+  },
+  "channels": {
+    "Guidance": "guidance",
+    "Marking": "marking",
+    "Points": "points",
+    "Problem": "problem",
+    "Problem ID": "canonical_id"
+  },
+  "hidden": {
+    "heldout": [
+      "points"
+    ],
+    "proof_heldout": [
+      "points"
+    ],
+    "proof_train": [
+      "points"
+    ],
+    "proof_validation": [
+      "points"
+    ],
+    "train_negative": [
+      "points"
+    ],
+    "train_positive": [
+      "points"
+    ],
+    "validation_negative": [
+      "points"
+    ],
+    "validation_positive": [
+      "points"
+    ]
+  },
+  "identity": {
+    "column": "Problem ID",
+    "partitions": {
+      "heldout": "heldout",
+      "proof_heldout": "heldout",
+      "proof_train": "train",
+      "proof_validation": "validation",
+      "train_negative": "train",
+      "train_positive": "train",
+      "validation_negative": "validation",
+      "validation_positive": "validation"
+    }
+  },
+  "key": "Grading ID",
+  "quarantine": {
+    "path": "quarantine.json",
+    "sha256": "546a055800f874716a5b76bab9fa7292c113cda67121456714501e7388470233"
+  },
+  "sets": {
+    "heldout": "build/heldout.csv",
+    "proof_heldout": "build/proof_heldout.csv",
+    "proof_train": "build/proof_train.csv",
+    "proof_validation": "build/proof_validation.csv",
+    "train_negative": "build/train_negative.csv",
+    "train_positive": "build/train_positive.csv",
+    "validation_negative": "build/validation_negative.csv",
+    "validation_positive": "build/validation_positive.csv"
+  },
+  "version": "imo-bench-joint-v4"
+}

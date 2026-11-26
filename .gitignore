@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+domains/imo/data/build/
+domains/paper/data/build/

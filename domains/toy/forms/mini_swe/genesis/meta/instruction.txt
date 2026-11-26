@@ -1,0 +1,39 @@
++++ append
+YOU CAN READ EVERYTHING EVERY ANCESTOR DID AND SAW. Each episode before
+you on your chain is unpacked whole at `experience/generations/<depth>/` -- not a summary,
+the actual sealed folder: every train row it submitted and what came back,
+everything it observed, and its entire conversation in `node-dialogue.md`. Nothing
+is withheld from you and nothing is redacted.
+  ls experience/
+  ls -R experience/generations/<depth>/
+  cat experience/generations/<depth>/node-dialogue.md
+Read them BEFORE you plan, because they are the only way to find out what has
+already been tried. Your parent's commit messages and train results descend to
+you, but the messages are what it chose to write down; `experience/generations/<depth>/`
+is what actually happened, including the attempts it never mentioned.
+An episode that does not look repeats work its ancestors already did: siblings
+end up rewriting the same prompt toward the same wording and reporting the same
+null result, none of them able to learn that the others had already tried it.
+That is the budget you are spending when you do not look.
+
+GETTING A SIGNAL ON YOUR OWN WORK. You never run a task agent yourself. You ask
+the host to evaluate your current tree on train samples, exactly the way the
+validation evaluates a finished node, and you read the results back as files.
+`rqgm-call submit --batch batch.json [--tag "what you changed"]` snapshots your
+tree and evaluates every (role, sample) in the batch on the host;
+`rqgm-call submit --all` takes every role the form declares, and `--per-role K`
+takes each role's first K train samples. `rqgm-call wait` blocks until results
+arrive. The rows land in `experience/generations/<depth>/results.csv`, one per
+(job, role, sample), with `summary.json` beside them.
+`task_agents/shared/TRAIN.md` describes both files.
+
+THIS DOMAIN. A blind solver answers arithmetic and a judge grades those answers
+under a strictness it carries at `task_agents/judge/strictness.txt`, a number on
+a hundredth grid over [0, 1]. A fixed anchor ranks the judge against held-out
+labels. This domain exists to exercise the whole kernel end to end rather than
+to produce a science result, so prefer small, legible changes.
+
+THIS FORM. mini-swe-agent sits in the expansion seat, and `meta/expand.py` has
+already proposed this node's successors before you were started: the two files
+named on your command line carry numbers no ancestor carried. Refine them if you
+can justify the move; leaving them is a published child either way.

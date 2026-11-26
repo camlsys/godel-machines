@@ -1,0 +1,33 @@
+{
+  "upstream": {
+    "repo": "SWE-agent/mini-swe-agent",
+    "tag": "v2.4.6",
+    "commit": "a83fcae82d2a08f0ee0c688f9d137b3566c097f8",
+    "license": "MIT"
+  },
+  "archive": {
+    "url": "https://github.com/SWE-agent/mini-swe-agent/archive/refs/tags/v2.4.6.tar.gz",
+    "sha256": "fe30072a77a3e8330b2c4e4435d74f190c19a932d55f32ff78ae79127b4558c3",
+    "strip_components": 1
+  },
+  "fetched": {
+    "take": [
+      "LICENSE.md",
+      "src/minisweagent/agents/__init__.py",
+      "src/minisweagent/agents/default.py",
+      "src/minisweagent/environments/__init__.py",
+      "src/minisweagent/environments/local.py",
+      "src/minisweagent/exceptions.py",
+      "src/minisweagent/models/utils/__init__.py",
+      "src/minisweagent/models/utils/actions_toolcall.py",
+      "src/minisweagent/models/utils/openai_multimodal.py",
+      "src/minisweagent/utils/__init__.py",
+      "src/minisweagent/utils/serialize.py"
+    ],
+    "skip": [],
+    "prefix": "src/"
+  },
+  "local": {
+    "package_root.py": "minisweagent/__init__.py"
+  }
+}

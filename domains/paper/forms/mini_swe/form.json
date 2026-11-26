@@ -1,0 +1,185 @@
+{
+  "domain": "paper",
+  "coordinates": {
+    "currency": {
+      "adversarial": true,
+      "dataset": true,
+      "interpretation": false,
+      "reviewer": true,
+      "sample": false
+    },
+    "dataset": "dataset",
+    "interpretation": "interpretation",
+    "sample": "sample"
+  },
+  "pins": {
+    "adversarial": "empty",
+    "interpretation": "verdict-v1"
+  },
+  "interpretations": {
+    "adversarial-v1": {
+      "high": 0.0,
+      "kind": "band",
+      "low": 0.0
+    },
+    "verdict-v1": {
+      "kind": "full_credit"
+    }
+  },
+  "roles": {
+    "reviewer": {
+      "tasks": {
+        "review_positive": {
+          "search": "validation_positive",
+          "train": "train_positive"
+        },
+        "review_negative": {
+          "search": "validation_negative",
+          "train": "train_negative"
+        }
+      },
+      "reads": "paper_text",
+      "episode": {
+        "argv": [
+          "python",
+          "-m",
+          "task_agents.shared.runtime"
+        ],
+        "image_recipe": "meta-arm/mini-swe",
+        "tag": "haiku-high",
+        "outputs": {
+          "verdict.txt": "verdict.txt"
+        },
+        "evidence": {
+          "parsed": ".rqgm/parsed.json",
+          "reply": ".rqgm/reply.txt",
+          "reviewed": ".rqgm/reviewed.txt"
+        },
+        "token_allotment": "unbounded",
+        "idle_seconds": 3600.0
+      }
+    },
+    "writer": {
+      "tasks": {
+        "write": {
+          "search": "write_validation",
+          "train": "write_train"
+        }
+      },
+      "reads": "input",
+      "episode": {
+        "argv": [
+          "python",
+          "-m",
+          "task_agents.shared.runtime"
+        ],
+        "image_recipe": "meta-arm/mini-swe",
+        "tag": "haiku-high",
+        "outputs": {
+          "paper_text": "paper_text"
+        },
+        "evidence": {
+          "reply": ".rqgm/reply.txt",
+          "review": ".rqgm/review.txt",
+          "staged": ".rqgm/staged.txt"
+        },
+        "token_allotment": "unbounded",
+        "idle_seconds": 3600.0
+      }
+    }
+  },
+  "judges": {
+    "apres": {
+      "over": [
+        "reviewer"
+      ],
+      "rule": "apres-agreement-v1",
+      "tag": "haiku-high",
+      "identity": true,
+      "reads": [
+        "verdict.txt"
+      ],
+      "settles": [
+        "decision"
+      ],
+      "deadline_seconds": 300.0
+    },
+    "reviewer": {
+      "over": [
+        "writer"
+      ],
+      "rule": "review-decision-v1",
+      "identity": false,
+      "reads": [
+        "paper_text"
+      ],
+      "settles": [],
+      "deadline_seconds": 300.0
+    }
+  },
+  "transitions": {
+    "adversarial": {
+      "criterion": {
+        "high": 1.0,
+        "low": 1.0,
+        "slot": "reviewer"
+      },
+      "interpretation": "adversarial-v1",
+      "judge": "reviewer",
+      "kind": "pool",
+      "name": "adversarial",
+      "signer": "reviewer"
+    },
+    "reviewer": {
+      "kind": "objective_transition",
+      "min_trials": 0,
+      "surfaces": [
+        {
+          "judge": "apres",
+          "samples": "validation_positive",
+          "side": "accept"
+        },
+        {
+          "judge": "apres",
+          "samples": "validation_negative",
+          "side": "reject"
+        },
+        {
+          "judge": "reviewer",
+          "samples": "adversarial",
+          "side": "reject"
+        }
+      ]
+    }
+  },
+  "expansion": {
+    "argv": [
+      "python",
+      "-B",
+      "meta/entry.py"
+    ],
+    "image_recipe": "meta-arm/mini-swe",
+    "tag": "haiku-high",
+    "outputs": {},
+    "evidence": {},
+    "token_allotment": "unbounded",
+    "idle_seconds": 3600.0
+  },
+  "bindings": {
+    "haiku-high": {
+      "effort": "high",
+      "endpoint": "anthropic/claude-haiku-4-5",
+      "kwargs": {},
+      "output_tokens": 128000,
+      "sequence_tokens": 1000000
+    }
+  },
+  "weights": {
+    "haiku-high": {
+      "tokens_in": 1.0,
+      "tokens_out": 1.0
+    }
+  },
+  "cpus": 1.0,
+  "memory_bytes": 1073741824
+}

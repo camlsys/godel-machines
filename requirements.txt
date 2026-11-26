@@ -1,0 +1,4 @@
+pydantic==2.13.4
+pygit2==1.19.3
+scipy==1.18.0
+# live provider (optional): litellm==1.97.0

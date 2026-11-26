@@ -1,0 +1,135 @@
++++ append
+This domain
+-----------
+Olympiad proof writing, judged by a grader you evolve, anchored on hidden human
+marks. Two seats, both ordinary Python under `task_agents/`, both yours to edit,
+both scored, and they weigh the same:
+
+  `task_agents/writer/__init__.py`  reads `problem`, one IMO problem statement
+                                    in LaTeX, and writes the proof to `marking`.
+                                    The reply is the proof: no restated problem,
+                                    no heading, nothing read out of it. Measured
+                                    on `proof_validation` by an external grader
+                                    that is not yours.
+  `task_agents/grader/__init__.py`  reads `marking`, a marking text with four
+                                    sections (`### Problem`, `### Solution`,
+                                    `### Grading guidelines`, `### Response`),
+                                    and writes `grade.txt` holding
+                                    `{"score": n}` with `n` an integer from 0 to
+                                    7, or `-1` for a reply it could not read.
+                                    Measured against the mark a human grader
+                                    gave that response.
+
+Read every ancestor before you plan. Each episode before you on your chain is
+unpacked whole under `experience/generations/<depth>/`: every train row it
+submitted and what came back, and its entire conversation in `node-dialogue.md`.
+Commit messages are what an ancestor chose to write down; the folder is what
+happened.
+
+The grader
+----------
+It runs in two modes and only one earns its score. It is never told which.
+
+  GENERATE  reads a corpus row: a real problem, its official solution, the
+            human grading guidelines and a real human response. Its mark earns
+            1.0 when it is exactly the mark the human gave, 0.0 otherwise: not
+            the same side of a line, the same integer. The corpus uses four
+            marks, 0, 1, 6 and 7. Answering 7 to everything scores exactly 0.50
+            on the balanced surfaces, and no constant does better, so a grader
+            at 0.50 has found the constant and not the signal; the distance to
+            1.00 is how much of the human's judgement it recovers. A `-1` is a
+            disagreement on every row.
+  JUDGE     is staged the same problem, solution and guidelines as `guidance.txt`
+            and the writer's proof as `marking`; the seat joins the two under
+            `### Response`, so a judged proof has the layout a corpus row has.
+            Its mark scores the writer, not itself: `form.json` declares
+            `grade-verdict-v1` as a threshold at 7, so a 7 pays the writer 1.0
+            and anything else 0.0.
+
+The grader asks the model for its reasoning in prose and the mark in one fenced
+JSON block, `{"points": n}`, read through `shared/reply.py`. Reasoning inside
+the block was tried and lost: a grader's reasoning is LaTeX, and `\(` or `\pmod`
+inside a JSON string is an illegal escape that threw the whole reply away.
+
+The writer
+----------
+It runs in one mode and is always scored. It writes a proof, hands it to your
+grader through `grader.review`, and writes again with the mark and the reasoning
+in front of it; the revision is what the host marks, and the exchange is kept
+under `.rqgm/review.txt`. `REVIEW_ROUNDS` in the writer is the round count; zero
+is the one-call seat. The consultation runs on the writer's own grant and costs a
+call per round.
+
+Your grader's mark on your writer is a heuristic. It says whether a change moved
+anything on your own tree; it does not say the level, because the grader that
+decides is external, unseen, and may be stricter. A grader tuned to award 7
+freely buys the writer nothing there and costs the grader its own agreement
+with the human marks. The writer never sees the solution or the guidelines: the
+host stages it the problem alone, and code that reaches for more is code the
+host will not stage.
+
+The populations
+---------------
+Only the train populations are yours to look at. A canonical problem and all
+of its writer and grader examples share one train, validation or held-out
+assignment. Different training sets can contain examples of the same problem.
+
+  train_positive, train_negative   the grader's train rows, marked 7 and
+                                   marked 0, 1 or 6 respectively.
+                                   The human mark for each is staged beside the
+                                   sample under `experience/data/train/`. Nothing
+                                   scored here decides anything, and the task
+                                   agents you submit never see that folder.
+  proof_train                      the writer's train rows, 16 problems across
+                                   ProofBench's four difficulty levels, staged
+                                   the same way with the official solution and
+                                   guidelines beside each for you to read.
+  validation_positive, _negative   the grader's measured rows, over problems
+                                   absent from all training sets. Every judgment the
+                                   grader earns comes off these and you never
+                                   see their marks.
+  proof_validation                 the writer's measured rows, 16 problems.
+                                   Never staged.
+  heldout, proof_heldout           the test splits. Nothing in this run touches
+                                   them.
+  adversarial                      proofs a grader this run has since replaced
+                                   awarded 7. Scored once it exists and fully
+                                   external: the active grader earns on it by
+                                   not awarding 7 again. You cannot see it,
+                                   count it or practise on it.
+
+What your node is ranked on
+---------------------------
+Both seats, weighing the same. The sampler draws role-balanced, so the writer's
+one task is sampled as much as the grader's two together and the writer is half
+of your node's utility. A perfect grader with a writer that never reaches 7
+gives the node 0.5, and nothing the grader does can lift it above that. The
+composite is carried up your clade: your descendants' results count toward you.
+
+Measuring
+---------
+`rqgm-call submit` and `rqgm-call wait` work as the shared page says; the
+rows land in `experience/generations/<depth>/results.csv` with `summary.json`
+beside them, and `task_agents/shared/TRAIN.md` describes both files.
+
+A proof row leaves two rows, the writer's and the grader's judgment of it; read
+them together. Read the rate off `summary.json`, never off stdout: `by_seat`
+groups each role by `seat_digest`, the digest of the submitted tree, and each
+group carries `n`, `measured` and `rate`. `kind` says what a row is: `MEASURED`
+is a judgment, `FAILED` a seat that ran and did not produce, `REFUSED` carries a
+`refusal_code`. A grader row
+whose `score` is `-1` is a reply the seat could not read; many of those is a
+prompt or parsing defect, not a hard problem.
+
+Measure both halves of the grader and measure the writer. Take a reading before
+you touch anything, change one thing, resubmit the rows you already measured,
+and say in the commit message what you measured before, what after, and on how
+many rows. Edit, then submit, never both at once: a train row runs the seat as
+it stood in the snapshot the submission took.
+
+What will not work
+------------------
+Awarding the same mark to everything: 7 caps at 0.50 and every other constant
+sits below it. Leaking the solution to the writer: it is not staged. Making the
+grader lenient: the writer is scored elsewhere. Reading the mark from the
+reasoning instead of the block: the block is the only thing parsed.

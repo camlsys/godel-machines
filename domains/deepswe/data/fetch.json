@@ -1,0 +1,59 @@
+{
+  "build": {
+    "args": [],
+    "tool": "tools/operations/build_deepswe_corpus.py"
+  },
+  "channels": {
+    "assessed": "assessed",
+    "image": "image",
+    "review_label": "review_label",
+    "task": "input",
+    "verifier": "verifier"
+  },
+  "hidden": {
+    "test": [
+      "verifier"
+    ],
+    "test_negative": [
+      "review_label"
+    ],
+    "test_positive": [
+      "review_label"
+    ],
+    "train": [
+      "verifier"
+    ],
+    "train_negative": [
+      "review_label"
+    ],
+    "train_positive": [
+      "review_label"
+    ],
+    "validation": [
+      "verifier"
+    ],
+    "validation_negative": [
+      "review_label"
+    ],
+    "validation_positive": [
+      "review_label"
+    ]
+  },
+  "image": "image",
+  "key": "sample",
+  "private": [
+    "verifier"
+  ],
+  "sets": {
+    "test": "build/test.csv",
+    "test_negative": "build/test_negative.csv",
+    "test_positive": "build/test_positive.csv",
+    "train": "build/train.csv",
+    "train_negative": "build/train_negative.csv",
+    "train_positive": "build/train_positive.csv",
+    "validation": "build/validation.csv",
+    "validation_negative": "build/validation_negative.csv",
+    "validation_positive": "build/validation_positive.csv"
+  },
+  "version": "deepswe-v1.1-6db64a40"
+}

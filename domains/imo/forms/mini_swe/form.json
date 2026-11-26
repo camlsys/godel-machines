@@ -1,0 +1,193 @@
+{
+  "domain": "imo",
+  "coordinates": {
+    "currency": {
+      "adversarial": true,
+      "dataset": true,
+      "grader": true,
+      "interpretation": false,
+      "sample": false
+    },
+    "dataset": "dataset",
+    "interpretation": "interpretation",
+    "sample": "sample"
+  },
+  "pins": {
+    "adversarial": "empty",
+    "interpretation": "mark-verdict-v1"
+  },
+  "interpretations": {
+    "adversarial-v1": {
+      "high": 0.0,
+      "kind": "band",
+      "low": 0.0
+    },
+    "grade-verdict-v1": {
+      "bar": 7.0,
+      "kind": "threshold"
+    },
+    "mark-verdict-v1": {
+      "kind": "full_credit"
+    }
+  },
+  "roles": {
+    "grader": {
+      "tasks": {
+        "grade_positive": {
+          "search": "validation_positive",
+          "train": "train_positive"
+        },
+        "grade_negative": {
+          "search": "validation_negative",
+          "train": "train_negative"
+        }
+      },
+      "reads": "marking",
+      "episode": {
+        "argv": [
+          "python",
+          "-m",
+          "task_agents.shared.runtime"
+        ],
+        "image_recipe": "meta-arm/mini-swe",
+        "tag": "haiku-high",
+        "outputs": {
+          "grade.txt": "grade.txt"
+        },
+        "evidence": {
+          "parsed": ".rqgm/parsed.json",
+          "reply": ".rqgm/reply.txt"
+        },
+        "token_allotment": "unbounded",
+        "idle_seconds": 3600.0
+      }
+    },
+    "writer": {
+      "tasks": {
+        "prove": {
+          "search": "proof_validation",
+          "train": "proof_train"
+        }
+      },
+      "reads": "problem",
+      "episode": {
+        "argv": [
+          "python",
+          "-m",
+          "task_agents.shared.runtime"
+        ],
+        "image_recipe": "meta-arm/mini-swe",
+        "tag": "haiku-high",
+        "outputs": {
+          "marking": "marking"
+        },
+        "evidence": {
+          "reply": ".rqgm/reply.txt",
+          "review": ".rqgm/review.txt",
+          "staged": ".rqgm/staged.txt"
+        },
+        "token_allotment": "unbounded",
+        "idle_seconds": 3600.0
+      }
+    }
+  },
+  "judges": {
+    "grader": {
+      "over": [
+        "writer"
+      ],
+      "rule": "imo-grade-v1",
+      "interpretation": "grade-verdict-v1",
+      "identity": false,
+      "reads": [
+        "marking"
+      ],
+      "prepare": {
+        "guidance": "guidance.txt"
+      },
+      "settles": [],
+      "deadline_seconds": 300.0
+    },
+    "marks": {
+      "over": [
+        "grader"
+      ],
+      "rule": "mark-agreement-v1",
+      "interpretation": "mark-verdict-v1",
+      "tag": "haiku-high",
+      "identity": true,
+      "reads": [
+        "grade.txt"
+      ],
+      "settles": [
+        "points"
+      ],
+      "deadline_seconds": 300.0
+    }
+  },
+  "transitions": {
+    "adversarial": {
+      "criterion": {
+        "high": 7.0,
+        "low": 7.0,
+        "slot": "grader"
+      },
+      "interpretation": "adversarial-v1",
+      "judge": "grader",
+      "kind": "pool",
+      "name": "adversarial",
+      "signer": "grader"
+    },
+    "grader": {
+      "kind": "objective_transition",
+      "min_trials": 0,
+      "surfaces": [
+        {
+          "judge": "marks",
+          "samples": "validation_positive",
+          "side": "accept"
+        },
+        {
+          "judge": "marks",
+          "samples": "validation_negative",
+          "side": "reject"
+        },
+        {
+          "judge": "grader",
+          "samples": "adversarial",
+          "side": "reject"
+        }
+      ]
+    }
+  },
+  "expansion": {
+    "argv": [
+      "python",
+      "-B",
+      "meta/entry.py"
+    ],
+    "image_recipe": "meta-arm/mini-swe",
+    "tag": "haiku-high",
+    "outputs": {},
+    "evidence": {},
+    "token_allotment": "unbounded",
+    "idle_seconds": 3600.0
+  },
+  "bindings": {
+    "haiku-high": {
+      "effort": "high",
+      "endpoint": "anthropic/claude-haiku-4-5",
+      "kwargs": {},
+      "output_tokens": 128000,
+      "sequence_tokens": 1000000
+    }
+  },
+  "weights": {
+    "haiku-high": {
+      "tokens_in": 1.0,
+      "tokens_out": 1.0
+    }
+  },
+  "cpus": 1.0,
+  "memory_bytes": 1073741824
+}

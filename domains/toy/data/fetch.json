@@ -1,0 +1,1 @@
+{"channels":{"expected":"expected","probe":"probe"},"hidden":{"test":["expected"],"train":["expected"],"validation":["expected"]},"key":"sample","sets":{"test":"test.csv","train":"train.csv","validation":"validation.csv"},"successors":{"toy-arith-v3":{"test":"v3/test.csv","train":"v3/train.csv","validation":"v3/validation.csv"}},"version":"toy-arith-v2"}

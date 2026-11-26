@@ -1,0 +1,45 @@
+{
+  "build": {
+    "args": [],
+    "tool": "tools/operations/build_paper_corpus.py"
+  },
+  "channels": {
+    "abstract": "input",
+    "decision": "decision",
+    "paper_text": "paper_text"
+  },
+  "hidden": {
+    "heldout": [
+      "decision"
+    ],
+    "train_negative": [
+      "decision"
+    ],
+    "train_positive": [
+      "decision"
+    ],
+    "validation_negative": [
+      "decision"
+    ],
+    "validation_positive": [
+      "decision"
+    ],
+    "write_train": [
+      "decision"
+    ],
+    "write_validation": [
+      "decision"
+    ]
+  },
+  "key": "question_id",
+  "sets": {
+    "heldout": "build/heldout.csv",
+    "train_negative": "build/train_negative.csv",
+    "train_positive": "build/train_positive.csv",
+    "validation_negative": "build/validation_negative.csv",
+    "validation_positive": "build/validation_positive.csv",
+    "write_train": "build/write_train.csv",
+    "write_validation": "build/write_validation.csv"
+  },
+  "version": "apres-ae869f8e-v5"
+}

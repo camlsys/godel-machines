@@ -1,0 +1,181 @@
+{
+  "domain": "toy-arith",
+  "coordinates": {
+    "currency": {
+      "adversarial": true,
+      "dataset": true,
+      "interpretation": false,
+      "judge": true,
+      "sample": false
+    },
+    "dataset": "dataset",
+    "interpretation": "interpretation",
+    "sample": "sample"
+  },
+  "pins": {
+    "adversarial": "empty",
+    "interpretation": "t50"
+  },
+  "interpretations": {
+    "adversarial-v1": {
+      "high": 0.49,
+      "kind": "band",
+      "low": 0.0
+    },
+    "t50": {
+      "bar": 0.5,
+      "kind": "threshold"
+    },
+    "t70": {
+      "bar": 0.7,
+      "kind": "threshold"
+    }
+  },
+  "roles": {
+    "judge": {
+      "tasks": {
+        "review": {
+          "search": "validation",
+          "train": "train"
+        }
+      },
+      "reads": "probe",
+      "episode": {
+        "argv": [
+          "python",
+          "-m",
+          "task_agents.shared.runtime"
+        ],
+        "image_recipe": "meta-arm/python",
+        "tag": null,
+        "outputs": {
+          "verdict.txt": "verdict.txt"
+        },
+        "evidence": {},
+        "token_allotment": "unbounded",
+        "idle_seconds": 3600.0
+      }
+    },
+    "solver": {
+      "tasks": {
+        "sum": {
+          "search": "validation",
+          "train": "train"
+        }
+      },
+      "reads": null,
+      "episode": {
+        "argv": [
+          "python",
+          "-m",
+          "task_agents.shared.runtime"
+        ],
+        "image_recipe": "meta-arm/python",
+        "tag": null,
+        "outputs": {
+          "probe": "probe"
+        },
+        "evidence": {},
+        "token_allotment": "unbounded",
+        "idle_seconds": 3600.0
+      }
+    }
+  },
+  "judges": {
+    "checker": {
+      "over": [
+        "judge"
+      ],
+      "rule": "agreement-v1",
+      "identity": false,
+      "reads": [
+        "verdict.txt"
+      ],
+      "settles": [
+        "expected",
+        "probe"
+      ],
+      "deadline_seconds": 300.0
+    },
+    "judge": {
+      "over": [
+        "solver"
+      ],
+      "rule": "strictness-v1",
+      "identity": false,
+      "reads": [
+        "probe"
+      ],
+      "settles": [],
+      "deadline_seconds": 300.0
+    }
+  },
+  "transitions": {
+    "adversarial": {
+      "criterion": {
+        "high": 1.0,
+        "low": 0.5,
+        "slot": "judge"
+      },
+      "interpretation": "adversarial-v1",
+      "judge": "judge",
+      "kind": "pool",
+      "name": "adversarial",
+      "signer": "judge"
+    },
+    "dataset": {
+      "at": 2,
+      "kind": "curriculum",
+      "source": "toy-arith-v2",
+      "target": "toy-arith-v3"
+    },
+    "interpretation": {
+      "at": 16,
+      "kind": "curriculum",
+      "source": "t50",
+      "target": "t70"
+    },
+    "judge": {
+      "kind": "objective_transition",
+      "min_trials": 0,
+      "surfaces": [
+        {
+          "judge": "checker",
+          "samples": "validation",
+          "side": "accept"
+        }
+      ]
+    }
+  },
+  "expansion": {
+    "argv": [
+      "python",
+      "-B",
+      "meta/expand.py",
+      "task_agents/solver/answer.txt",
+      "task_agents/judge/strictness.txt"
+    ],
+    "image_recipe": "meta-arm/mini-swe",
+    "tag": "small",
+    "outputs": {},
+    "evidence": {},
+    "token_allotment": "unbounded",
+    "idle_seconds": 3600.0
+  },
+  "bindings": {
+    "small": {
+      "endpoint": "openai/gpt-4o-mini",
+      "kwargs": {},
+      "output_tokens": "unbounded",
+      "sequence_tokens": 1000000
+    }
+  },
+  "weights": {
+    "small": {
+      "tokens_in": 1.0,
+      "tokens_out": 1.0
+    }
+  },
+  "cpus": 1.0,
+  "memory_bytes": 1073741824
+}

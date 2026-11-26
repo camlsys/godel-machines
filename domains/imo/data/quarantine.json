@@ -1,0 +1,45 @@
+{
+  "members": [
+    {
+      "path": "build/heldout.csv",
+      "problems": 10,
+      "sha256": "584ff05d9165fac73a89e903075b0cca18dcbcfc1c8fb19b03175b5598528853"
+    },
+    {
+      "path": "build/proof_heldout.csv",
+      "problems": 20,
+      "sha256": "c5f1214506de7c8bd247add32514e333baab0e0b7cdac9a7601f18edbf148b23"
+    }
+  ],
+  "problems": [
+    "PB-Advanced-001",
+    "PB-Advanced-002",
+    "PB-Advanced-003",
+    "PB-Advanced-004",
+    "PB-Advanced-005",
+    "PB-Advanced-006",
+    "PB-Advanced-014",
+    "PB-Advanced-016",
+    "PB-Advanced-017",
+    "PB-Advanced-018",
+    "PB-Advanced-019",
+    "PB-Advanced-020",
+    "PB-Advanced-021",
+    "PB-Advanced-022",
+    "PB-Advanced-023",
+    "PB-Advanced-024",
+    "PB-Advanced-027",
+    "PB-Advanced-028",
+    "PB-Advanced-029",
+    "PB-Advanced-030",
+    "PB-Basic-004",
+    "PB-Basic-005",
+    "PB-Basic-012",
+    "PB-Basic-013",
+    "PB-Basic-014",
+    "PB-Basic-020",
+    "PB-Basic-021",
+    "PB-Basic-023"
+  ],
+  "source_commit": "179fd8b99ae7baa1505a7a24db36d57c8c09f0a5"
+}

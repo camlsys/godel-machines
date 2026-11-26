@@ -1,0 +1,5 @@
+sample,expected,probe
+w1,24,24
+w2,31,31
+w3,42,40
+w4,57,50
